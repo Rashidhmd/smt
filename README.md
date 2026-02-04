@@ -1,13 +1,16 @@
 # Symbolic AI and SMT solving
 
-Symbolic AI is an approach to Artificial Intelligence that uses deductive reasoning to produce exact and explainable results to well-defined problems, compared to sub-symbolic methods (e.g. machine learning, deep NNs, LLMs, etc.), which use statistical learning to tackle a wide variety of tasks (possibly vaguely defined) to produce plausible answers (which can however be incorrect and that are usually not explainable). Integration between symbolic and sub-symbolic methods is a hot topic in AI.
+Symbolic AI is an approach to Artificial Intelligence that relies on deductive reasoning to produce exact, explainable solutions to well-defined problems. This contrasts with sub-symbolic methods (e.g., machine learning, NNs, and LLMs), which use statistical learning to address a wide range of (possibly vaguely defined) tasks, producing plausible but not always correct results that are typically hard to explain. Integrating symbolic and sub-symbolic techniques is a hot topic in AI (neuro-symbolic AI).
 
-SMT solvers are tools that can be used to reason about and rigorously solve different kinds of problems, involving arithmetic, arrays, bit vectors, etc. They are used in industrial applications for several tasks, such as program verification, planning, testing, etc. 
+SMT (Satisfiability Modulo Theories) solvers are automated tools for reasoning about and rigorously solving problems involving arithmetic, arrays, bit vectors, and more. They are widely used in industrial settings for tasks such as program verification, planning, and testing.
 
-In this lesson, we introduce z3, an efficient and user-friendly  SMT solver developed by Microsoft. We will compare it to both user-written algorithms and LLMs on a simple task such as solving a Sudoku. We will also see how to use z3 to solve the Die Hard jug riddle (a model checking problem). 
+In this seminar, we introduce Z3, an efficient and user-friendly SMT solver developed by Microsoft. We will compare it to both hand-written algorithms and LLM-based approaches on a simple illustrative problem, such as solving a Sudoku. Then, we will show how SMT solving can be used for program verification (i.e., checking whether a program satisfies a given specification), discussing some applications in smart contract security.
 
-Finally, we will give a few exercises to experiment with the tool.
+Throughout the seminar, students will actively engage with the material by working on a series of simple, guided exercises that will be assigned during the session, allowing them to experiment directly with the tool and reinforce the concepts discussed.
 
+
+## Exam
+The final assessment consists of a small project developed using the Z3 Python APIs.
 
 ## Requirements
 
@@ -15,6 +18,8 @@ Install z3 Python APIs through pip:
 ```pip3 install z3-solver```
 
 [z3Py Tutorial](https://ericpony.github.io/z3py-tutorial/guide-examples.htm)
+
+[Programming z3](https://theory.stanford.edu/~nikolaj/programmingz3.html)
 
 ## Content
 - [Sudoku](sudoku.py)
