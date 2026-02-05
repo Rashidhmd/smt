@@ -11,7 +11,7 @@ Throughout the seminar, students will actively engage with the material by worki
 
 ## Exam
 
-Solve this [problem](Exercises/Exam.py) using z3.
+Solve this [problem](Exercises/Exam.py) using z3. Submit your solution through this [form](https://forms.gle/LLEMJDBheKmvUrw4A).
 
 
 ## Requirements
