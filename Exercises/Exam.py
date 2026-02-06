@@ -45,6 +45,59 @@
 #   Distance from goal: 0
 #
 
+from z3 import *
+
+# Create a list of integer variables x_0, x_1, ..., x_9
+x = [Int(f'x_{i}') for i in range(6)] 
+goal = Int('goal')
+
+# Create a datatype to represent the functions f and g
+Function = Datatype('Functions')
+Function.declare('add')
+Function.declare('sub')
+Function.declare('mul')
+Function.declare('div')
+Function = Function.create()
+
+# Create a list of variables to represent the function applied at each step
+function = [Const("f_%s" % (i), Function) for i in range(6)]
+
+def add(x_now1, x_now2, x_next):
+    return x_next == x_now1 + x_now2
+
+def sub(x_now1, x_now2, x_next):
+    return x_next == x_now1 - x_now2
+
+def mul(x_now1, x_now2, x_next):
+    return x_next == x_now1 * x_now2
+
+def div(x_now1, x_now2, x_next):
+    return x_next == x_now1 / x_now2
+
+def CountingStrategy(x, goal):
+    # Create the solver
+    s = Solver()
+
+    # Add the initial state constraint
+    initial_state = x[0] == 0
+    s.add(initial_state)
+    for i in range(5):
+        transition = Or(
+            And(function[i] == Function.add, add(x[i], x[i+1])),
+            And(function[i] == Function.sub, sub(x[i], x[i+1])),
+            And(function[i] == Function.mul, mul(x[i], x[i+1])),
+            And(function[i] == Function.div, div(x[i], x[i+1])),
+        )
+        s.add(transition) 
+        s.add(x[i+1] != x[i])  
+        # check if property P is satisfied at step i+1
+        status = s.check(x[i+1] == goal)  # add the property constraint
+        if status == sat:
+            print(f"Property satisfied at step {i+1}")
+            #print(s.model())
+            #printModelBMC(s.model())
+            break
+
 
 # [Optional]
 # After you have implemented the function to find the optimal strategy for the Counting game, consider the following variation of the game.
