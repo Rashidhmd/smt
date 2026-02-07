@@ -77,10 +77,11 @@
 
 
 from z3 import *
+MAX_NUMBERS = 6
 
 # Create a list of integer variables x_0, x_1, ..., x_9
-user_numbers = [Int(f'num_{i}') for i in range(6)]
-x = [Int(f'x_{i}') for i in range(5)] 
+user_numbers = [Int(f'num_{i}') for i in range(MAX_NUMBERS)]
+x = [Int(f'x_{i}') for i in range(MAX_NUMBERS)] 
 goal = 462
 
 # Create a datatype to represent the functions f and g
@@ -92,7 +93,7 @@ Function.declare('div')
 Function = Function.create()
 
 # Create a list of variables to represent the function applied at each step
-function = [Const("f_%s" % (i), Function) for i in range(5)]
+function = [Const("f_%s" % (i), Function) for i in range(MAX_NUMBERS - 1)]
 
 def add(x1, x2, x_next):
     return x_next == x1 + x2
@@ -115,12 +116,15 @@ def div(x1, x2, x_next):
 #   Final number: 462
 #   Distance from goal: 0
 def printModelBMC(m):
-    print("Initial number: ", m[user_numbers[0]])
-    for i in range(5):
-        if m[function[i]] == None: break
-        print(f"Step {i+1}: operation {m[function[i]]} with number {m[user_numbers[i+1]]} -> result: {m[x[i+1]]}")
+    op = {"div": "/", "mul":"*", "sub":"-", "add": "+"}
 
-def CountingStrategy(numbers=[1, 3, 5, 8, 10, 11], goal=462):
+    print("Initial number: ", m[user_numbers[0]])
+    for i in range(MAX_NUMBERS-1):
+        if m[function[i]] == None: break
+        
+        print(f"Step {i+1}: operation {op[str(m[function[i]])]} with number {m[user_numbers[i+1]]} -> result: {m[x[i+1]]}")
+
+def CountingStrategy(numbers=[1, 3, 5, 6, 4, 2], goal=56):
     # Create the solver
     s = Solver()
 
@@ -129,15 +133,15 @@ def CountingStrategy(numbers=[1, 3, 5, 8, 10, 11], goal=462):
     initial_state1 = x[0] == user_numbers[0]
 
     # constraint that each number chosen is different
-    chosen_numbers =  Distinct(user_numbers) 
+    distinct_numbers =  Distinct(user_numbers) 
 
 
     s.add(initial_state)
     s.add(initial_state1)
-    s.add(chosen_numbers)
+    s.add(distinct_numbers)
 
-    for i in range(5):
-        number_distinction = Or(user_numbers[i+1]==numbers[0], user_numbers[i+1]==numbers[1], user_numbers[i+1]==numbers[2], user_numbers[i+1]==numbers[3], user_numbers[i+1]==numbers[4], user_numbers[i+1]==numbers[5]) 
+    for i in range(MAX_NUMBERS-1):
+        selected_number = Or(user_numbers[i+1]==numbers[0], user_numbers[i+1]==numbers[1], user_numbers[i+1]==numbers[2], user_numbers[i+1]==numbers[3], user_numbers[i+1]==numbers[4], user_numbers[i+1]==numbers[5]) 
         transition = Or(
             And(function[i] == Function.add, add(x[i], user_numbers[i+1], x[i+1])),
             And(function[i] == Function.sub, sub(x[i], user_numbers[i+1], x[i+1])),
@@ -145,13 +149,12 @@ def CountingStrategy(numbers=[1, 3, 5, 8, 10, 11], goal=462):
             And(function[i] == Function.div, div(x[i], user_numbers[i+1], x[i+1])),
         )
         s.add(transition) 
-        s.add(number_distinction)
+        s.add(selected_number)
         
         # check if property P is satisfied at step i+1
         status = s.check(x[i+1] == goal)  # add the property constraint
         if status == sat:
             print(f"Property satisfied at step {i+1}")
-            #print(s.model())
             printModelBMC(s.model())
             break
 
