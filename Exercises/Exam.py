@@ -45,11 +45,43 @@
 #   Distance from goal: 0
 #
 
+# 8 + 1 = 9
+# 9 * 50 = 450
+# 450 + 10 = 460
+# 460 - 3 = 457
+# 457 + 5 = 462
+
+# 
+# x[0] + 1 = x[1]
+# x[1] * 50 = x[2]
+# x[2] + 10 = x[3]
+# x[3] - 3 = x[4]
+# x[4] + 5 = x[5]
+
+# lista di numeri [1,2,3] e lista di stati ottenuti [3,6]
+# x[0] = 1
+# x[1] = 2
+# x[0] uno di quei numeri
+
+# numero iniziale x[0] uno tra quelli
+# x[1] prende un valore tra quelli(3) e fa l'operazione - e ottiene 47 
+# prende il risultato precedente e un valore tra quelli(10) e fa l'operazione * e ottiene 470
+# prende il risultato precedente e un valore tra quelli(8) e fa l'operazione - e ottiene 462
+# 
+
+# x1 + x2 = add(x1, x2)
+# 9 * 50 = 450
+# 450 + 10 = 460
+# 460 - 3 = 457
+# 457 + 5 = 462
+
+
 from z3 import *
 
 # Create a list of integer variables x_0, x_1, ..., x_9
-x = [Int(f'x_{i}') for i in range(6)] 
-goal = Int('goal')
+user_numbers = [Int(f'num_{i}') for i in range(6)]
+x = [Int(f'x_{i}') for i in range(5)] 
+goal = 462
 
 # Create a datatype to represent the functions f and g
 Function = Datatype('Functions')
@@ -60,43 +92,62 @@ Function.declare('div')
 Function = Function.create()
 
 # Create a list of variables to represent the function applied at each step
-function = [Const("f_%s" % (i), Function) for i in range(6)]
+function = [Const("f_%s" % (i), Function) for i in range(5)]
 
-def add(x_now1, x_now2, x_next):
-    return x_next == x_now1 + x_now2
+def add(x1, x2, x_next):
+    return x_next == x1 + x2
 
-def sub(x_now1, x_now2, x_next):
-    return x_next == x_now1 - x_now2
+def sub(x1, x2, x_next):
+    return x_next == x1 - x2
 
-def mul(x_now1, x_now2, x_next):
-    return x_next == x_now1 * x_now2
+def mul(x1, x2, x_next):
+    return x_next == x1 * x2
 
-def div(x_now1, x_now2, x_next):
-    return x_next == x_now1 / x_now2
+def div(x1, x2, x_next):
+    return x_next == x1 / x2
 
-def CountingStrategy(x, goal):
+def printModelBMC(m):
+    m_sorted = sorted ([(d, m[d]) for d in m], key = lambda x: str(x[0]))
+    print(*m_sorted,sep='\n')
+
+def CountingStrategy(numbers=[1, 3, 5, 8, 10, 11], goal=462):
     # Create the solver
     s = Solver()
 
     # Add the initial state constraint
-    initial_state = x[0] == 0
+    initial_state = Or(user_numbers[0]==numbers[0], user_numbers[0]==numbers[1], user_numbers[0]==numbers[2], user_numbers[0]==numbers[3], user_numbers[0]==numbers[4], user_numbers[0]==numbers[5])
+    initial_state1 = x[0] == user_numbers[0]
+
+    # constraint that each number chosen is different
+    chosen_numbers =  Distinct(user_numbers) 
+
+
     s.add(initial_state)
+    s.add(initial_state1)
+    s.add(chosen_numbers)
+
     for i in range(5):
+        number_distinction = Or(user_numbers[i+1]==numbers[0], user_numbers[i+1]==numbers[1], user_numbers[i+1]==numbers[2], user_numbers[i+1]==numbers[3], user_numbers[i+1]==numbers[4], user_numbers[i+1]==numbers[5]) 
         transition = Or(
-            And(function[i] == Function.add, add(x[i], x[i+1])),
-            And(function[i] == Function.sub, sub(x[i], x[i+1])),
-            And(function[i] == Function.mul, mul(x[i], x[i+1])),
-            And(function[i] == Function.div, div(x[i], x[i+1])),
+            And(function[i] == Function.add, add(x[i], user_numbers[i+1], x[i+1])),
+            And(function[i] == Function.sub, sub(x[i], user_numbers[i+1], x[i+1])),
+            And(function[i] == Function.mul, mul(x[i], user_numbers[i+1], x[i+1])),
+            And(function[i] == Function.div, div(x[i], user_numbers[i+1], x[i+1])),
         )
         s.add(transition) 
-        s.add(x[i+1] != x[i])  
+        s.add(number_distinction)
+        
         # check if property P is satisfied at step i+1
         status = s.check(x[i+1] == goal)  # add the property constraint
         if status == sat:
             print(f"Property satisfied at step {i+1}")
             #print(s.model())
-            #printModelBMC(s.model())
+            printModelBMC(s.model())
             break
+
+CountingStrategy()
+
+
 
 
 # [Optional]
