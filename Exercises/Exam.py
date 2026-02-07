@@ -106,9 +106,19 @@ def mul(x1, x2, x_next):
 def div(x1, x2, x_next):
     return x_next == x1 / x2
 
+
+# CountingStrategy([1, 3, 5, 8, 10, 50], 462) should output:
+#   Initial number: 50
+#   Step 1: operation - with number 3 -> result 47
+#   Step 2: operation * with number 10 -> result 470
+#   Step 3: operation - with number 8 -> result 462
+#   Final number: 462
+#   Distance from goal: 0
 def printModelBMC(m):
-    m_sorted = sorted ([(d, m[d]) for d in m], key = lambda x: str(x[0]))
-    print(*m_sorted,sep='\n')
+    print("Initial number: ", m[user_numbers[0]])
+    for i in range(5):
+        if m[function[i]] == None: break
+        print(f"Step {i+1}: operation {m[function[i]]} with number {m[user_numbers[i+1]]} -> result: {m[x[i+1]]}")
 
 def CountingStrategy(numbers=[1, 3, 5, 8, 10, 11], goal=462):
     # Create the solver
