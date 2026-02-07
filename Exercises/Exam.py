@@ -77,12 +77,12 @@
 
 
 from z3 import *
+
 MAX_NUMBERS = 6
 
 # Create a list of integer variables x_0, x_1, ..., x_9
 user_numbers = [Int(f'num_{i}') for i in range(MAX_NUMBERS)]
 x = [Int(f'x_{i}') for i in range(MAX_NUMBERS)] 
-goal = 462
 
 # Create a datatype to represent the functions f and g
 Function = Datatype('Functions')
@@ -107,6 +107,11 @@ def mul(x1, x2, x_next):
 def div(x1, x2, x_next):
     return x_next == x1 / x2
 
+def z3_min(exprs):
+    m = exprs[0]
+    for e in exprs[1:]:
+        m = If(e < m, e, m)
+    return m
 
 # CountingStrategy([1, 3, 5, 8, 10, 50], 462) should output:
 #   Initial number: 50
@@ -115,33 +120,44 @@ def div(x1, x2, x_next):
 #   Step 3: operation - with number 8 -> result 462
 #   Final number: 462
 #   Distance from goal: 0
-def printModelBMC(m):
+def printModelBMC(m, goal):
     op = {"div": "/", "mul":"*", "sub":"-", "add": "+"}
 
+    # pick best step (0..5) where Abs(x-step - goal) is minimal in THIS model
+    best_step = 0
+    best_dist_val = abs(m.evaluate(x[0]).as_long() - goal)
+    for i in range(1, MAX_NUMBERS):
+        di = abs(m.evaluate(x[i]).as_long() - goal)
+        if di < best_dist_val:
+            best_dist_val = di
+            best_step = i
+
     print("Initial number: ", m[user_numbers[0]])
-    for i in range(MAX_NUMBERS-1):
+    for i in range(best_step):
         if m[function[i]] == None: break
         
         print(f"Step {i+1}: operation {op[str(m[function[i]])]} with number {m[user_numbers[i+1]]} -> result: {m[x[i+1]]}")
 
-def CountingStrategy(numbers=[1, 3, 5, 6, 4, 2], goal=56):
+    print("Final number", m.evaluate(x[best_step]))
+    print("Distance from goal:", best_dist_val)
+
+def CountingStrategy(numbers=[], goal=10):
     # Create the solver
     s = Solver()
 
-    # Add the initial state constraint
-    initial_state = Or(user_numbers[0]==numbers[0], user_numbers[0]==numbers[1], user_numbers[0]==numbers[2], user_numbers[0]==numbers[3], user_numbers[0]==numbers[4], user_numbers[0]==numbers[5])
-    initial_state1 = x[0] == user_numbers[0]
+    # each chosen number must be one of the starting numbers
+    for i in range(MAX_NUMBERS):
+        s.add(Or(*[user_numbers[i] == n for n in numbers]))
 
-    # constraint that each number chosen is different
-    distinct_numbers =  Distinct(user_numbers) 
+    # all 6 picks are distinct (assumes input numbers are all different, as per exercise)
+    s.add(Distinct(*user_numbers))
 
+    # initial state
+    s.add(x[0] == user_numbers[0])
 
-    s.add(initial_state)
-    s.add(initial_state1)
-    s.add(distinct_numbers)
 
     for i in range(MAX_NUMBERS-1):
-        selected_number = Or(user_numbers[i+1]==numbers[0], user_numbers[i+1]==numbers[1], user_numbers[i+1]==numbers[2], user_numbers[i+1]==numbers[3], user_numbers[i+1]==numbers[4], user_numbers[i+1]==numbers[5]) 
+
         transition = Or(
             And(function[i] == Function.add, add(x[i], user_numbers[i+1], x[i+1])),
             And(function[i] == Function.sub, sub(x[i], user_numbers[i+1], x[i+1])),
@@ -149,17 +165,47 @@ def CountingStrategy(numbers=[1, 3, 5, 6, 4, 2], goal=56):
             And(function[i] == Function.div, div(x[i], user_numbers[i+1], x[i+1])),
         )
         s.add(transition) 
-        s.add(selected_number)
+
+    # distance at each step (including step 0)
+    d = [Int(f"d_{i}") for i in range(MAX_NUMBERS)]
+    for i in range(MAX_NUMBERS):
+        s.add(d[i] == Abs(x[i] - goal))
+
+    best_dist = Int("best_dist")
+    s.add(best_dist == z3_min(d))
+
+    # --- FIRST: if exact goal reachable at any step, we can quickly find it ---
+    reachable = False
+    for i in range(MAX_NUMBERS):
+        if s.check(d[i] == 0) == sat:
+            print(f"Exact goal reachable at step {i}")
+            printModelBMC(s.model(), goal)
+            return s.model()
+    
+    best_model = None
+    best_val = None
+
+    while s.check() == sat:
+        m = s.model()
+        cur = m.evaluate(best_dist).as_long()
+
+        best_model = m
+        best_val = cur
+
+        # force strictly better next time
+        s.add(best_dist < cur)
+
+    # last SAT model was the best
+    if best_model is not None:
+        print("No exact solution. Closest found:")
+        printModelBMC(best_model, goal)
+        return best_model
+    else:
+        print("UNSAT (unexpected if input numbers are valid).")
+        return None
         
-        # check if property P is satisfied at step i+1
-        status = s.check(x[i+1] == goal)  # add the property constraint
-        if status == sat:
-            print(f"Property satisfied at step {i+1}")
-            printModelBMC(s.model())
-            break
 
-CountingStrategy()
-
+CountingStrategy([1, 3, 5, 8, 10, 50], 462)
 
 
 
