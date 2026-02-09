@@ -45,35 +45,6 @@
 #   Distance from goal: 0
 #
 
-# 8 + 1 = 9
-# 9 * 50 = 450
-# 450 + 10 = 460
-# 460 - 3 = 457
-# 457 + 5 = 462
-
-# 
-# x[0] + 1 = x[1]
-# x[1] * 50 = x[2]
-# x[2] + 10 = x[3]
-# x[3] - 3 = x[4]
-# x[4] + 5 = x[5]
-
-# lista di numeri [1,2,3] e lista di stati ottenuti [3,6]
-# x[0] = 1
-# x[1] = 2
-# x[0] uno di quei numeri
-
-# numero iniziale x[0] uno tra quelli
-# x[1] prende un valore tra quelli(3) e fa l'operazione - e ottiene 47 
-# prende il risultato precedente e un valore tra quelli(10) e fa l'operazione * e ottiene 470
-# prende il risultato precedente e un valore tra quelli(8) e fa l'operazione - e ottiene 462
-# 
-
-# x1 + x2 = add(x1, x2)
-# 9 * 50 = 450
-# 450 + 10 = 460
-# 460 - 3 = 457
-# 457 + 5 = 462
 
 
 from z3 import *
