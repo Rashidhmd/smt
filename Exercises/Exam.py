@@ -141,7 +141,7 @@ def printModelBMC(m, goal):
     print("Final number", m.evaluate(x[best_step]))
     print("Distance from goal:", best_dist_val)
 
-def CountingStrategy(numbers=[], goal=10):
+def CountingStrategy(numbers=[], goal=Int('goal')):
     # Create the solver
     s = Solver()
 
@@ -178,7 +178,7 @@ def CountingStrategy(numbers=[], goal=10):
     reachable = False
     for i in range(MAX_NUMBERS):
         if s.check(d[i] == 0) == sat:
-            print(f"Exact goal reachable at step {i}")
+            #print(f"Exact goal reachable at step {i}")
             printModelBMC(s.model(), goal)
             return s.model()
     
@@ -197,7 +197,7 @@ def CountingStrategy(numbers=[], goal=10):
 
     # last SAT model was the best
     if best_model is not None:
-        print("No exact solution. Closest found:")
+        #print("No exact solution. Closest found:")
         printModelBMC(best_model, goal)
         return best_model
     else:
